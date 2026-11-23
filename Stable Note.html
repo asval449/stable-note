@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Stable Note</title>
+<style>
+:root{--bg:#f4f6f9;--sf:#fff;--tx:#1f2733;--mu:#667085;--nv:#1b2a4a;--ac:#2b4a8b;--bd:#d5dae3;--hd:#e9edf4;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181f;--sf:#1d232d;--tx:#e6e9ef;--mu:#98a2b3;--nv:#0f1a33;--ac:#6f93e0;--bd:#323b4b;--hd:#262e3b}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 -apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
+header{background:var(--nv);color:#fff;padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+header h1{margin:0;font-size:20px;cursor:pointer;letter-spacing:.5px}header input{flex:1;min-width:160px;max-width:420px;padding:7px 10px;border-radius:6px;border:0}
+main{max-width:1400px;margin:0 auto;padding:16px}
+button,.btn{background:var(--ac);color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit}
+button.g{background:var(--sf);color:var(--tx);border:1px solid var(--bd)}button.d{background:#b3372f}
+input,select,textarea{font:inherit;color:var(--tx);background:var(--sf);border:1px solid var(--bd);border-radius:5px;padding:4px 6px;max-width:100%}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:16px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.sp{flex:1}
+.big{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:20px}
+.big div{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:36px 20px;text-align:center;cursor:pointer;font-size:26px;font-weight:700;color:var(--nv)}
+.big div small{display:block;font-size:13px;font-weight:400;color:var(--mu)}
+.big div:hover{border-color:var(--ac)}
+.tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.tc{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:10px;display:flex;gap:10px;align-items:center;cursor:pointer}
+.tc:hover{border-color:var(--ac)}.ph{width:56px;height:56px;border-radius:50%;object-fit:cover;background:var(--hd);flex:none;display:flex;align-items:center;justify-content:center;color:var(--mu)}
+.big-ph{width:110px;height:110px}
+.tw{overflow-x:auto;border:1px solid var(--bd);border-radius:8px;background:var(--sf)}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid var(--bd);padding:0;white-space:nowrap}
+th{background:var(--hd);padding:6px 8px;position:sticky;top:0;cursor:pointer;resize:horizontal;overflow:hidden;min-width:70px;text-align:left}
+td input,td select,td textarea{border:0;border-radius:0;width:100%;background:transparent;padding:6px 8px;min-width:60px}
+td textarea{min-width:200px;height:34px;resize:vertical;white-space:pre-wrap}
+td.ro{padding:6px 8px;text-align:right;background:var(--hd)}td.a{padding:4px 8px;text-align:center}
+td input:focus,td select:focus,td textarea:focus{outline:2px solid var(--ac);outline-offset:-2px;background:var(--sf)}
+a{color:var(--ac)}.mu{color:var(--mu)}.tabs button{margin-right:6px}.tabs .on{background:var(--nv);color:#fff}
+.modal{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;z-index:20;padding:16px}
+.modal>div{background:var(--sf);border-radius:10px;padding:18px;max-width:560px;width:100%;max-height:90vh;overflow:auto}
+.modal label{display:block;margin:8px 0 2px;color:var(--mu);font-size:12px}.modal input,.modal select,.modal textarea{width:100%}
+h2{margin:0 0 10px;font-size:18px;color:var(--nv)}@media(prefers-color-scheme:dark){h2{color:var(--tx)}}
+</style></head><body>
+<header><h1 onclick="go('home')">Stable Note</h1><input id="q" type="search" placeholder="全体検索（馬名・調教師・所属・クラス・レース・メモ）" oninput="doSearch()"></header>
+<main id="m"></main><div id="md"></div>
+<script>
+const K='stablenote_v1',TR=['中山','東京','阪神','京都','函館','札幌','福島','新潟','中京','小倉'],CL=['新馬','未勝利','1勝','2勝','3勝','OP','L','G3','G2','G1'];
+const COLS=[['name','馬名','t'],['sex','性別','s',['','牡','牝','セン']],['age','年齢','n'],['cls','クラス','c'],['pName','前走レース','t'],['pRank','前走着順','n'],['pTrack','前走競馬場','s',['',...TR]],['pDist','前走距離','t'],['nCls','次走クラス','c'],['nName','次走予定レース','t'],['nTrack','次走競馬場','s',['',...TR]],['nDist','次走距離','t'],['memo','メモ','m'],['url','Netkeiba','u']];
+let D;try{D=JSON.parse(localStorage.getItem(K))}catch(e){}D=D||{t:[],h:[],s:{}};
+let V={p:'home',aff:'',tid:'',yr:2026,kind:'flat'},S={k:'age',d:1},PS=50,F={aff:'',cls:''};
+const $=id=>document.getElementById(id),uid=()=>Math.random().toString(36).slice(2,10);
+const e=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function save(){try{localStorage.setItem(K,JSON.stringify(D))}catch(x){alert('保存に失敗しました（容量不足の可能性）。')}}
+function go(p,o={}){$('q').value='';Object.assign(V,{p},o);render();scrollTo(0,0)}
+const tn=id=>D.t.find(t=>t.id==id);
+const byKana=(a,b)=>(a.kana||a.name).localeCompare(b.kana||b.name,'ja');
+function ask(msg,cb){$('md').innerHTML=`<div class="modal"><div><p>${e(msg)}</p><div class="row"><button class="d" id="y">削除する</button><button class="g" onclick="$('md').innerHTML=''">キャンセル</button></div></div></div>`;$('y').onclick=()=>{$('md').innerHTML='';cb()}}
+function box(title,html,ok){$('md').innerHTML=`<div class="modal"><div><h2>${title}</h2>${html}<div class="row" style="margin-top:12px"><button id="ok">${ok?'保存':'閉じる'}</button>${ok?'<button class="g" onclick="$(\'md\').innerHTML=\'\'">キャンセル</button>':''}</div></div></div>`;$('ok').onclick=()=>{if(!ok)return $('md').innerHTML='';if(ok()!==false)$('md').innerHTML=''}}
+function render(){const v=V.p,m=$('m');
+ if(v=='home')m.innerHTML=`<div class="card"><h2>所属を選択</h2><div class="mu">調教師 ${D.t.length}名 ／ 競走馬 ${D.h.length}頭</div><div class="big"><div onclick="go('list',{aff:'美浦'})">美浦<small>${D.t.filter(t=>t.aff=='美浦').length}名</small></div><div onclick="go('list',{aff:'栗東'})">栗東<small>${D.t.filter(t=>t.aff=='栗東').length}名</small></div></div></div><div class="card"><div class="row"><b>データ管理</b><span class="sp"></span><button class="g" onclick="exportBox('csv')">CSV出力</button><button class="g" onclick="exportBox('json')">バックアップ</button><button class="g" onclick="importBox()">復元</button></div><div class="mu">データはこのブラウザに自動保存されます。</div></div>`;
+ if(v=='list'){const L=D.t.filter(t=>t.aff==V.aff).sort(byKana);m.innerHTML=`<div class="row"><button class="g" onclick="go('home')">← ホーム</button><h2 style="margin:0">${V.aff} 調教師</h2><span class="sp"></span><button onclick="trForm()">＋ 調教師を登録</button></div><div class="tg">${L.map(t=>tc(t)).join('')||'<div class="mu">まだ登録がありません。</div>'}</div>`}
+ if(v=='trainer')trainerView();
+ if(v=='search')searchView();
+}
+const ph=(t,c='')=>t.photo?`<img class="ph ${c}" src="${t.photo}">`:`<div class="ph ${c}">👤</div>`;
+const tc=t=>`<div class="tc" onclick="go('trainer',{tid:'${t.id}'})">${ph(t)}<div><b>${e(t.name)}</b><div class="mu">${t.aff}／重賞${t.gj||0}勝／${D.h.filter(h=>h.tid==t.id).length}頭</div></div></div>`;
+function trForm(id){const t=id?tn(id):{aff:V.aff||'美浦'};let ph64=t.photo||'';
+ box(id?'調教師を編集':'調教師を登録',`<label>調教師名</label><input id="f1" value="${e(t.name)}"><label>よみ（五十音順用）</label><input id="f2" value="${e(t.kana)}"><label>所属</label><select id="f3"><option ${t.aff=='美浦'?'selected':''}>美浦</option><option ${t.aff=='栗東'?'selected':''}>栗東</option></select><label>重賞勝利数</label><input id="f4" type="number" min="0" value="${t.gj||0}"><label>顔写真</label><input id="f5" type="file" accept="image/*"><label>メモ</label><textarea id="f6" rows="4">${e(t.memo)}</textarea>`,()=>{const n=$('f1').value.trim();if(!n){alert('調教師名を入力してください');return false}
+  const o=id?t:{id:uid()};Object.assign(o,{name:n,kana:$('f2').value.trim(),aff:$('f3').value,gj:+$('f4').value||0,memo:$('f6').value,photo:ph64});if(!id)D.t.push(o);save();V.aff=o.aff;render()});
+ $('f5').onchange=ev=>{const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const c=document.createElement('canvas'),s=Math.min(1,240/Math.max(i.width,i.height));c.width=i.width*s;c.height=i.height*s;c.getContext('2d').drawImage(i,0,0,c.width,c.height);ph64=c.toDataURL('image/jpeg',.8)};i.src=r.result};r.readAsDataURL(f)}}
+function trainerView(){const t=tn(V.tid);if(!t)return go('home');
+ $('m').innerHTML=`<div class="row"><button class="g" onclick="go('list',{aff:'${t.aff}'})">← ${t.aff}の調教師一覧</button></div><div class="card"><div class="row" style="align-items:flex-start">${ph(t,'big-ph')}<div class="sp"><h2>${e(t.name)}</h2><div>所属：${t.aff}　重賞勝利数：${t.gj||0}</div><div style="white-space:pre-wrap" class="mu">${e(t.memo)}</div></div><button class="g" onclick="trForm('${t.id}')">編集</button><button class="d" onclick="ask('${e(t.name)}調教師と管理馬・成績をすべて削除します。よろしいですか？',()=>{D.h=D.h.filter(h=>h.tid!='${t.id}');delete D.s['${t.id}'];D.t=D.t.filter(x=>x.id!='${t.id}');save();go('list',{aff:'${t.aff}'})})">削除</button></div></div>
+ <div class="card"><div class="row"><h2 style="margin:0">管理馬一覧</h2><span class="sp"></span><label>表示件数 <select onchange="PS=+this.value;trainerView()">${[20,50,100,500].map(n=>`<option ${n==PS?'selected':''}>${n}</option>`).join('')}</select></label><button onclick="addHorse()">＋ 競走馬を追加</button></div><div id="ht"></div></div><div class="card" id="st"></div>`;
+ drawH();drawStats()}
+function addHorse(){D.h.push({id:uid(),tid:V.tid,name:'',age:''});save();drawH()}
+function sorted(L){const k=S.k,n=COLS.find(c=>c[0]==k)[2]=='n';return[...L].sort((a,b)=>{let x=a[k]??'',y=b[k]??'';if(k=='cls'||k=='nCls'){x=CL.indexOf(x);y=CL.indexOf(y)}else if(n){x=x===''?1e9:+x;y=y===''?1e9:+y}if(x==y)return 0;return(x>y?1:-1)*S.d})}
+function hTable(L,showT){const cs=COLS;return`<datalist id="cl">${CL.map(c=>`<option value="${c}">`).join('')}</datalist><div class="tw"><table><thead><tr>${showT?'<th>調教師</th>':''}${cs.map(c=>`<th onclick="S={k:'${c[0]}',d:S.k=='${c[0]}'?-S.d:1};refresh()">${c[1]}${S.k==c[0]?(S.d>0?' ▲':' ▼'):''}</th>`).join('')}<th></th></tr></thead><tbody>${sorted(L).slice(0,PS).map(h=>`<tr>${showT?`<td class="ro" style="text-align:left">${e(tn(h.tid)?.name)}</td>`:''}${cs.map(c=>`<td>${cell(h,c)}</td>`).join('')}<td class="a"><button class="g" onclick="ask('この馬を削除しますか？',()=>{D.h=D.h.filter(x=>x.id!='${h.id}');save();refresh()})">🗑</button></td></tr>`).join('')}</tbody></table></div><div class="mu" style="margin-top:6px">${Math.min(L.length,PS)} / ${L.length}頭　見出しクリックで並べ替え・セル直接編集</div>`}
+function cell(h,[k,,t,o]){const v=h[k]??'',a=`data-id="${h.id}" data-k="${k}" onchange="upd(this)"`;
+ if(t=='s')return`<select ${a}>${o.map(x=>`<option ${x==v?'selected':''}>${x}</option>`).join('')}</select>`;
+ if(t=='m')return`<textarea ${a}>${e(v)}</textarea>`;
+ if(t=='u')return`<div style="display:flex;align-items:center"><input ${a} value="${e(v)}" placeholder="URL">${/^https?:\/\//.test(v)?`<a href="${e(v)}" target="_blank" rel="noopener" style="padding:0 8px">開く</a>`:''}</div>`;
+ return`<input ${a} ${t=='n'?'type="number" min="0"':''} ${t=='c'?'list="cl"':''} value="${e(v)}">`}
+function upd(el){const h=D.h.find(x=>x.id==el.dataset.id);h[el.dataset.k]=el.value;save();if(el.dataset.k=='url')refresh()}
+function refresh(){V.p=='trainer'?drawH():searchView(true)}
+function drawH(){$('ht').innerHTML=hTable(D.h.filter(h=>h.tid==V.tid),false)}
+const KINDS={flat:'平地',jump:'障害'};
+function rec(tid,y,k){return(D.s[tid]?.[y]?.[k])||[0,0,0,0,0,0]}
+function calc(r){const n=r.reduce((a,b)=>a+b,0),p=x=>n?(x/n*100).toFixed(1)+'%':'0.0%';return[n,p(r[0]),p(r[0]+r[1]),p(r[0]+r[1]+r[2])]}
+function drawStats(){const t=V.tid,r=rec(t,V.yr,V.kind),c=calc(r),H=['1着','2着','3着','4着','5着','着外'];
+ $('st').innerHTML=`<div class="row"><h2 style="margin:0">年度別成績</h2><select onchange="V.yr=+this.value;drawStats()">${Array.from({length:28},(_,i)=>2000+i).map(y=>`<option ${y==V.yr?'selected':''}>${y}</option>`).join('')}</select><span class="tabs">${Object.entries(KINDS).map(([k,n])=>`<button class="${V.kind==k?'on':'g'}" onclick="V.kind='${k}';drawStats()">${n}</button>`).join('')}</span></div>
+ <div class="tw"><table><thead><tr>${H.map(x=>`<th style="cursor:default">${x}</th>`).join('')}<th style="cursor:default">出走回数</th><th style="cursor:default">勝率</th><th style="cursor:default">連対率</th><th style="cursor:default">複勝率</th></tr></thead><tbody><tr>${r.map((x,i)=>`<td><input type="number" min="0" value="${x}" onchange="setS(${i},this.value)"></td>`).join('')}${c.map(x=>`<td class="ro">${x}</td>`).join('')}</tr></tbody></table></div>
+ <h2 style="margin:16px 0 8px">年度別比較（${KINDS[V.kind]}）</h2><div class="tw"><table><thead><tr><th style="cursor:default">年度</th>${H.map(x=>`<th style="cursor:default">${x}</th>`).join('')}<th style="cursor:default">出走</th><th style="cursor:default">勝率</th><th style="cursor:default">連対率</th><th style="cursor:default">複勝率</th></tr></thead><tbody>${Object.keys(D.s[t]||{}).sort().reverse().filter(y=>rec(t,y,V.kind).some(x=>x)).map(y=>{const q=rec(t,y,V.kind);return`<tr><td class="ro" style="text-align:left"><a href="#" onclick="V.yr=${y};drawStats();return false">${y}</a></td>${q.map(x=>`<td class="ro">${x}</td>`).join('')}${calc(q).map(x=>`<td class="ro">${x}</td>`).join('')}</tr>`}).join('')||'<tr><td class="ro" colspan="11" style="text-align:left">入力済みの年度がありません</td></tr>'}</tbody></table></div>`}
+function setS(i,v){const t=V.tid;D.s[t]??={};D.s[t][V.yr]??={};const r=D.s[t][V.yr][V.kind]??=[0,0,0,0,0,0];r[i]=Math.max(0,parseInt(v)||0);save();drawStats()}
+function doSearch(){$('q').value.trim()?(V.p='search',searchView()):go('home')}
+function searchView(keep){const q=$('q').value.trim().toLowerCase(),hit=(...a)=>a.join(' ').toLowerCase().includes(q);
+ const T=D.t.filter(t=>(!F.aff||t.aff==F.aff)&&hit(t.name,t.kana,t.aff,t.memo)).sort(byKana);
+ const H=D.h.filter(h=>{const t=tn(h.tid)||{};return(!F.aff||t.aff==F.aff)&&(!F.cls||h.cls==F.cls||h.nCls==F.cls)&&hit(h.name,t.name,t.aff,h.cls,h.nCls,h.pName,h.nName,h.memo)});
+ $('m').innerHTML=`<div class="row"><button class="g" onclick="go('home')">← ホーム</button><label>所属 <select onchange="F.aff=this.value;searchView()"><option value="">全て</option><option ${F.aff=='美浦'?'selected':''}>美浦</option><option ${F.aff=='栗東'?'selected':''}>栗東</option></select></label><label>クラス <select onchange="F.cls=this.value;searchView()"><option value="">全て</option>${CL.map(c=>`<option ${F.cls==c?'selected':''}>${c}</option>`).join('')}</select></label></div><div class="card"><h2>調教師（${T.length}）</h2><div class="tg">${T.map(tc).join('')}</div></div><div class="card"><h2>競走馬（${H.length}）</h2>${hTable(H,true)}</div>`}
+function exportBox(f){let s;if(f=='json')s=JSON.stringify(D);else{const q=x=>'"'+String(x??'').replace(/"/g,'""')+'"';s='\ufeff'+['調教師','所属',...COLS.map(c=>c[1])].map(q).join(',')+'\n'+D.h.map(h=>[tn(h.tid)?.name,tn(h.tid)?.aff,...COLS.map(c=>h[c[0]])].map(q).join(',')).join('\n')+'\n\n年度別成績\n調教師,年度,区分,1着,2着,3着,4着,5着,着外,出走,勝率,連対率,複勝率\n'+D.t.flatMap(t=>Object.entries(D.s[t.id]||{}).flatMap(([y,o])=>Object.entries(o).map(([k,r])=>[t.name,y,KINDS[k],...r,...calc(r)].map(q).join(',')))).join('\n')}
+ box(f=='json'?'バックアップ':'CSV出力',`<div class="mu">全文をコピーして保存してください（${f=='json'?'復元時はそのまま貼り付け':'Excel等に貼り付け'}）。</div><textarea id="ex" rows="12" readonly>${e(s)}</textarea><button class="g" style="margin-top:6px" onclick="$('ex').select();document.execCommand('copy')">コピー</button>`)}
+function importBox(){box('復元（現在のデータは上書きされます）','<textarea id="im" rows="12" placeholder="バックアップのテキストを貼り付け"></textarea>',()=>{try{const o=JSON.parse($('im').value);if(!o.t||!o.h)throw 0;D={t:o.t,h:o.h,s:o.s||{}};save();render()}catch(x){alert('データの形式が正しくありません');return false}})}
+render();
+</script></body></html>
